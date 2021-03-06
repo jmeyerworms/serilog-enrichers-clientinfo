@@ -38,6 +38,8 @@ namespace Serilog.Enrichers
             if (string.IsNullOrWhiteSpace(ipAddress))
                 ipAddress = "unknown";
 
+            ipAddress = TrunkatIPAddress(ipAddress);
+
             var ipAddressProperty = new LogEventProperty(IpAddressPropertyName, new ScalarValue(ipAddress));
 
             logEvent.AddPropertyIfAbsent(ipAddressProperty);
@@ -70,21 +72,26 @@ namespace Serilog.Enrichers
          return _contextAccessor.HttpContext.Connection.RemoteIpAddress.ToString();
      }
 #endif
-        
-    private string GetIpAddressFromProxy(string proxiedIpList)
-    {
-        var addresses = proxiedIpList.Split(',');
 
-        if (addresses.Length != 0)
+        private string GetIpAddressFromProxy(string proxiedIpList)
         {
-            // If IP contains port, it will be after the last : (IPv6 uses : as delimiter and could have more of them)
-            return addresses[0].Contains(":")
-                ? addresses[0].Substring(0, addresses[0].LastIndexOf(":", StringComparison.Ordinal))
-                : addresses[0];
+            var addresses = proxiedIpList.Split(',');
+
+            if (addresses.Length != 0)
+            {
+                // If IP contains port, it will be after the last : (IPv6 uses : as delimiter and could have more of them)
+                return addresses[0].Contains(":")
+                    ? addresses[0].Substring(0, addresses[0].LastIndexOf(":", StringComparison.Ordinal))
+                    : addresses[0];
+            }
+
+            return string.Empty;
         }
 
-        return string.Empty;
-    }
-    
+        private string TrunkatIPAddress(string ipaddress)
+        {
+            return ipaddress.Substring(0, ipaddress.LastIndexOf(".", StringComparison.Ordinal));
+        }
+
     }
 }

@@ -35,10 +35,9 @@ namespace Serilog.Enrichers
 
             var ipAddress = GetIpAddress();
 
-            if (string.IsNullOrWhiteSpace(ipAddress))
-                ipAddress = "unknown";
-
-            ipAddress = TrunkatIPAddress(ipAddress);
+            ipAddress = string.IsNullOrWhiteSpace(ipAddress) 
+                ? "unknown" 
+                : TrunkatIPAddress(ipAddress);
 
             var ipAddressProperty = new LogEventProperty(IpAddressPropertyName, new ScalarValue(ipAddress));
 
@@ -51,12 +50,9 @@ namespace Serilog.Enrichers
         {
             var ipAddress = _contextAccessor.HttpContext.Request.ServerVariables["HTTP_X_FORWARDED_FOR"];
 
-            if (!string.IsNullOrEmpty(ipAddress))
-            {
-                return GetIpAddressFromProxy(ipAddress);
-            }
-
-            return _contextAccessor.HttpContext.Request.ServerVariables["REMOTE_ADDR"];
+            return !string.IsNullOrEmpty(ipAddress) 
+                ? GetIpAddressFromProxy(ipAddress) 
+                : _contextAccessor.HttpContext.Request.ServerVariables["REMOTE_ADDR"];
         }
 
 #else
@@ -73,7 +69,7 @@ namespace Serilog.Enrichers
      }
 #endif
 
-        private string GetIpAddressFromProxy(string proxiedIpList)
+        private static string GetIpAddressFromProxy(string proxiedIpList)
         {
             var addresses = proxiedIpList.Split(',');
 
